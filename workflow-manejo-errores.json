@@ -1,0 +1,223 @@
+{
+  "name": "Manejo de errores - Agente RAG",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "98c32401-3eb6-4e32-bf72-1a1ea9794376",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        656,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "REEMPLAZAR_admin@tu-empresa.com",
+        "subject": "={{ 'Error en workflow: ' + $json.workflow.name }}",
+        "message": "={{ '<p><b>Nodo:</b> ' + $json.execution.lastNodeExecuted + '</p><p><b>Error:</b> ' + $json.execution.error.message + '</p><p><b>Ejecución:</b> ' + $json.execution.url + '</p>' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b00b13cb-01d4-440b-acda-c6919951e01f",
+      "name": "Alerta a administrador",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        928,
+        912
+      ],
+      "webhookId": "ea0b5b43-4bf1-4917-964c-100bfe293175",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REEMPLAZAR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "18f0fc58-1298-5b37-ac02-bb7b37c6fa5e",
+              "name": "fecha",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "2192ebc4-16d5-5ad8-96f9-7061d5c2768a",
+              "name": "workflow",
+              "value": "={{ $('Error Trigger').item.json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e3494d58-c0ce-5981-b0e0-54b6b2dc620c",
+              "name": "nodo",
+              "value": "={{ $('Error Trigger').item.json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "c74091f6-2015-5309-a90c-e899762ffc04",
+              "name": "error",
+              "value": "={{ $('Error Trigger').item.json.execution.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae0fea95-1936-4fee-8350-0ccfb0c5af4a",
+      "name": "Preparar fila error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REEMPLAZAR_ID_DE_TU_GOOGLE_SHEET",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Errores",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nodo",
+              "displayName": "nodo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6add4448-2193-4203-badf-3d8854eb19f4",
+      "name": "Log errores (Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1440,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REEMPLAZAR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Workflow de manejo de errores\nSe asigna como **Error workflow** del workflow principal (Settings). Ante cualquier falla no controlada: 1) mail de alerta al administrador, 2) registro en la hoja `Errores`. No necesita estar activo.",
+        "height": 120,
+        "width": 700,
+        "color": 2
+      },
+      "id": "5d31f1d4-e909-49d8-b18c-2bfc457326e3",
+      "name": "Nota E1 - Errores",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        736
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Alerta a administrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alerta a administrador": {
+      "main": [
+        [
+          {
+            "node": "Preparar fila error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar fila error": {
+      "main": [
+        [
+          {
+            "node": "Log errores (Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}
